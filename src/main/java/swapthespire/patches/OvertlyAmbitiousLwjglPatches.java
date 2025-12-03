@@ -2,7 +2,7 @@
  *  EXPERIMENTAL patches to see how much I can hack Lwjgl to be as lean as possible.
  */ 
 
-package ludicrousspeed.simulator.patches;
+package swapthespire.patches;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.audio.OpenALAudio;
