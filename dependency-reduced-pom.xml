@@ -7,7 +7,13 @@
   <version>0.0.1</version>
   <description>SwapTheSpire mod: switches control between Ludicrous'd Comm Mod and Pure Comm Mod based on if it is in combat or not</description>
   <build>
-    <finalName>SwapTheSpire</finalName>
+    <resources>
+      <resource>
+        <filtering>true</filtering>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
+    <finalName>${artifactId}</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
@@ -93,7 +99,10 @@
     </dependency>
   </dependencies>
   <properties>
+    <ModTheSpire.version>3.18.1</ModTheSpire.version>
+    <BaseMod.version>5.32.0</BaseMod.version>
     <maven.compiler.source>1.8</maven.compiler.source>
+    <SlayTheSpire.version>11-30-2020</SlayTheSpire.version>
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 </project>

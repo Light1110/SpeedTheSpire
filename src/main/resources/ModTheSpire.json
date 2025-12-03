@@ -1,9 +1,10 @@
 {
-  "modid": "Example_Mod_ID_12345",
-  "name": "Example Mod Name",
+  "modid": "${project.artifactId}",
+  "name": "${project.name}",
   "author_list": ["Author Name"],
-  "description": "Mod Description",
-  "version": "0.1",
-  "sts_version": "06-15-2018",
-  "mts_version": "2.7.0"
+  "description": "${project.description}",
+  "version": "${project.version}",
+  "sts_version": "${SlayTheSpire.version}",
+  "mts_version": "${ModTheSpire.version}",
+  "dependencies": ["basemod", "stslib", "CommunicationMod", "SaveStateMod", "LudicrousSpeed"]
 }
