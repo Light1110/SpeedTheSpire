@@ -11,6 +11,9 @@ import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.actions.GameActionManager;
+import com.megacrit.cardcrawl.vfx.AbstractGameEffect;
+import com.megacrit.cardcrawl.vfx.cardManip.ExhaustCardEffect;
 import communicationmod.CommunicationMod;
 
 import org.apache.logging.log4j.LogManager;
@@ -201,10 +204,63 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
     }
 
     private static void maybeSendCombatState() {
+        // Only send state when ready - similar to scumthespire's readyForUpdate()
+        if (!isReadyToSendCombatState()) {
+            return;
+        }
+        
         long now = System.currentTimeMillis();
         if (now - lastCombatStateSent > COMBAT_STATE_INTERVAL_MS) {
             CommunicationMod.sendGameState();
             lastCombatStateSent = now;
         }
+    }
+
+    /**
+     * Check if we're ready to send combat state.
+     * Based on scumthespire's readyForUpdate() logic - ensures cards are drawn
+     * and action manager is ready before sending state.
+     */
+    private static boolean isReadyToSendCombatState() {
+        if (AbstractDungeon.actionManager == null || AbstractDungeon.player == null) {
+            return false;
+        }
+
+        // Wait for action manager to finish executing actions (like drawing cards)
+        // This ensures hand is populated before we send state
+        if (AbstractDungeon.actionManager.turnHasEnded
+                || (AbstractDungeon.actionManager.currentAction != null 
+                    && AbstractDungeon.actionManager.phase == GameActionManager.Phase.EXECUTING_ACTIONS)
+                || !AbstractDungeon.actionManager.isEmpty()) {
+            // Only allow sending state during selection screens
+            if (!(AbstractDungeon.isScreenUp
+                    && (AbstractDungeon.screen == AbstractDungeon.CurrentScreen.HAND_SELECT 
+                        || AbstractDungeon.screen == AbstractDungeon.CurrentScreen.GRID 
+                        || AbstractDungeon.screen == AbstractDungeon.CurrentScreen.CARD_REWARD))) {
+                return false;
+            }
+        }
+
+        // Ensure we're in the right phase - waiting for user input
+        if (AbstractDungeon.actionManager.phase != GameActionManager.Phase.WAITING_ON_USER) {
+            return false;
+        }
+
+        // Wait for exhaust effects to finish
+        for (AbstractGameEffect effect : AbstractDungeon.effectList) {
+            if (effect instanceof ExhaustCardEffect) {
+                return false;
+            }
+        }
+
+        // Ensure end turn button is enabled (indicates turn is ready)
+        if (AbstractDungeon.overlayMenu == null 
+                || AbstractDungeon.overlayMenu.endTurnButton == null 
+                || !AbstractDungeon.overlayMenu.endTurnButton.enabled) {
+            return false;
+        }
+
+        // Use LudicrousSpeedMod's check as well
+        return ludicrousspeed.LudicrousSpeedMod.shouldStep();
     }
 }
