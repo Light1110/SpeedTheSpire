@@ -118,4 +118,27 @@ public class CommunicationModPatches {
             return SpireReturn.Continue();
         }
     }
+
+    /**
+     * Prevents CommunicationMod from starting external process.
+     * SpeedTheSpire uses InJavaCommunicationController to intercept game states
+     * instead of relying on CommunicationMod's external process.
+     * This prevents timeout errors during mod initialization.
+     * 
+     * We patch getRunOnGameStartOption() to always return false, which prevents
+     * CommunicationMod from attempting to start the external process.
+     */
+    @SpirePatch(
+            clz = CommunicationMod.class,
+            method = "getRunOnGameStartOption",
+            paramtypez = {}
+    )
+    public static class PreventExternalProcessStartup {
+        public static SpireReturn<Boolean> Prefix() {
+            // SpeedTheSpire handles communication via InJavaCommunicationController,
+            // so we don't need CommunicationMod's external process
+            // Always return false to prevent external process startup
+            return SpireReturn.Return(false);
+        }
+    }
 }

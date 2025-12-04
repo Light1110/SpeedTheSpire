@@ -20,5 +20,5 @@ SpeedTheSpire uses a unified TCP socket to send game state to external programs 
 - During combat phases, `CommunicationMod.sendGameState()` is called periodically to ensure the external program continuously receives state updates, and operations are sent via `ludi_commands` messages.
 
 ## Known Issues / TODO
-- error when loading comm mod
 - WTF is the 'how did we get here?'
+- error when a game ends
