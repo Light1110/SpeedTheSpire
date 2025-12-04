@@ -9,6 +9,7 @@ import com.megacrit.cardcrawl.monsters.MonsterGroup;
 import com.megacrit.cardcrawl.screens.DeathScreen;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.actions.GameActionManager;
 
 import communicationmod.EndOfTurnAction;
 
@@ -19,6 +20,7 @@ import communicationmod.CommunicationMod;
 import swapthespire.SwapTheSpire;
 
 import ludicrousspeed.simulator.patches.ServerStartupPatches;
+import ludicrousspeed.LudicrousSpeedMod;
 
 /* 
  * Patches against stuff LudicrousSpeed stuff does that I don't want it to do
@@ -38,5 +40,30 @@ public class LudicrousSpeedPatches {
             return SpireReturn.Return(null);
         }
 
+    }
+
+    /**
+     * Fix for "how did we get here?" issue.
+     * 
+     * In plaidMode, GameActionManager.callEndOfTurnActions() should be completely
+     * bypassed since ActionSimulator handles end-of-turn logic. LudicrousSpeed's
+     * patch only warns but continues execution, which can cause state inconsistencies
+     * and hanging. This patch completely skips the call to prevent issues.
+     */
+    @SpirePatch(
+            clz = GameActionManager.class,
+            method = "callEndOfTurnActions",
+            paramtypez = {}
+    )
+    public static class SkipCallEndOfTurnActionsInPlaidMode {
+        public static SpireReturn<Void> Prefix() {
+            if (LudicrousSpeedMod.plaidMode) {
+                // In plaidMode, ActionSimulator handles end-of-turn actions,
+                // so we should completely skip the normal game flow here
+                // This prevents the "how did we get here?" warning and potential hangs
+                return SpireReturn.Return(null);
+            }
+            return SpireReturn.Continue();
+        }
     }
 }
