@@ -1,19 +1,17 @@
 package swapthespire;
 
-import swapthespire.InJavaCommunicationController;
-
 import basemod.*;
 import basemod.interfaces.PostInitializeSubscriber;
 import basemod.interfaces.PreStartGameSubscriber;
 import basemod.interfaces.PostDungeonInitializeSubscriber;
 import basemod.interfaces.PreUpdateSubscriber;
-import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
 
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import communicationmod.CommunicationMod;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +21,9 @@ import savestate.SaveStateMod;
 import static ludicrousspeed.LudicrousSpeedMod.controller;
 import static ludicrousspeed.LudicrousSpeedMod.plaidMode;
 
+import swapthespire.controller.SocketCommandController;
+import swapthespire.networking.ExternalControlSocket;
+
 @SpireInitializer
 public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitializeSubscriber, PreUpdateSubscriber, PreStartGameSubscriber  {
     
@@ -30,7 +31,12 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
     private boolean exitOnNewGameStart = false;
     private static long gameDurationTimestamp = -1;
 
-    private static LudicrousCommunicationController ludicCommControllerInstance;
+    private static SocketCommandController socketCommandController;
+    private static ExternalControlSocket externalControlSocket;
+    @SuppressWarnings("unused")
+    private static InJavaCommunicationController communicationBridge;
+    private static long lastCombatStateSent = 0L;
+    private static final long COMBAT_STATE_INTERVAL_MS = 200L;
 
     public static enum InControl{
         LUDICROUS_SPEED,
@@ -46,18 +52,11 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
     public SwapTheSpire(){
         BaseMod.subscribe(this);
 
-        String mode = System.getProperty("mode");
-        // this is not working for some reason and i can't be fucked to debug why.
-        // if (mode == "random") {
-            logger.debug("initing ijcc");
-            InJavaCommunicationController ijcc = new InJavaCommunicationController(new AgentRandom());
-        //}
-        
+        logger.debug("SpeedTheSpire constructor");
     }
 
     public static void initialize(){
-        SwapTheSpire mod = new SwapTheSpire();
-
+        new SwapTheSpire();
         System.out.println("Initialized SwapTheSpire mod");
     }
     
@@ -65,8 +64,9 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
         // by default, we are out of combat, so we want CommMod in control
         active = InControl.COMMUNICATION_MOD;
 
-        // cache this so that we don't constantly re-initialize it
-        ludicCommControllerInstance = new LudicrousCommunicationController();
+        socketCommandController = new SocketCommandController();
+        externalControlSocket = new ExternalControlSocket(socketCommandController);
+        communicationBridge = new InJavaCommunicationController(externalControlSocket);
 
         // tell other mods to go fast
         SaveStateMod.shouldGoFast = true;
@@ -139,11 +139,7 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
         
             // Toggle ludicrous communication controller to be active based on desired controller
             
-            if (desired == InControl.LUDICROUS_SPEED){
-                controller = ludicCommControllerInstance;
-            } else {
-                controller = null;
-            }
+            controller = desired == InControl.LUDICROUS_SPEED ? socketCommandController : null;
         }
     }
 
@@ -152,6 +148,10 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
 
         if (active != desired) {
             SwapTheSpire.setActive(desired);
+        }
+
+        if (desired == InControl.LUDICROUS_SPEED) {
+            maybeSendCombatState();
         }
     }
 
@@ -200,4 +200,11 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
         logger.info("SwapTheSpire received post dungeon initialize. Seed is: " + Settings.seed.toString());
     }
 
+    private static void maybeSendCombatState() {
+        long now = System.currentTimeMillis();
+        if (now - lastCombatStateSent > COMBAT_STATE_INTERVAL_MS) {
+            CommunicationMod.sendGameState();
+            lastCombatStateSent = now;
+        }
+    }
 }

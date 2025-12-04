@@ -116,12 +116,14 @@ public class OvertlyAmbitiousLwjglPatches{
             return SpireReturn.Return(null);
         }
     }
+    // DISABLED: This patch breaks map room transitions when using socket communication
     @SpirePatch(clz = CardCrawlGame.class, method="render")
     public static class YeetRender {
         @SpirePrefixPatch
         public static SpireReturn Prefix(CardCrawlGame _instance) {
-            _instance.update();
-            return SpireReturn.Return(null);
+            // _instance.update();
+            // return SpireReturn.Return(null);
+            return SpireReturn.Continue();
         }
     }
 /*

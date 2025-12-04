@@ -4,7 +4,7 @@
   <groupId>swapTheSpire</groupId>
   <artifactId>SwapTheSpire</artifactId>
   <name>SwapTheSpire</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>SwapTheSpire mod: switches control between Ludicrous'd Comm Mod and Pure Comm Mod based on if it is in combat or not</description>
   <build>
     <resources>

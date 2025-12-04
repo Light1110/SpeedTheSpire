@@ -6,7 +6,7 @@
     <!-- Change These to match your mod -->
     <groupId>swapTheSpire</groupId>
     <artifactId>SwapTheSpire</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <packaging>jar</packaging>
     <name>SwapTheSpire</name>
     <description>SwapTheSpire mod: switches control between Ludicrous'd Comm Mod and Pure Comm Mod based on if it is in combat or not</description>
