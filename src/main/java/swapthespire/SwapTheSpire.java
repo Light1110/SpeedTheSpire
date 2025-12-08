@@ -27,6 +27,8 @@ import static ludicrousspeed.LudicrousSpeedMod.plaidMode;
 import swapthespire.controller.SocketCommandController;
 import swapthespire.networking.ExternalControlSocket;
 
+import swapthespire.patches.StartOverOnDeathScreenPatch;
+
 @SpireInitializer
 public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitializeSubscriber, PreUpdateSubscriber, PreStartGameSubscriber  {
     
@@ -147,6 +149,14 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
     }
 
     public void receivePreUpdate() {
+        // 死亡检测和快速重开逻辑
+        if (AbstractDungeon.screen == AbstractDungeon.CurrentScreen.DEATH) {
+            logger.info("Death screen detected in PreUpdate. Triggering immediate reset.");
+            StartOverOnDeathScreenPatch.deathReset();
+            // 重置后无需继续执行其他逻辑
+            return;
+        }
+
         InControl desired = SwapTheSpire.whoShouldBeInControl();
 
         if (active != desired) {
