@@ -120,78 +120,68 @@ public class StartOverOnDeathScreenPatch {
 
     }
 
-    @SpirePatch(
-            clz= DeathScreen.class,
-            paramtypez = {MonsterGroup.class},
-            method=SpirePatch.CONSTRUCTOR
-    )
-    public static class StartOverOnDeath {
-        // Modeled after screens.DeathScreen.update:666
-        public static SpireReturn Prefix(DeathScreen _instance, MonsterGroup monsterGroup) {
-            logger.info("we dead'ed, starting over immediately");
-            Settings.isTrial = false;
-            Settings.isDailyRun = false;
-            Settings.isEndless = false;
-            CardCrawlGame.trial = null;
-            CardCrawlGame.playCreditsBgm = false;
+    public static void deathReset() {
+        logger.info("we dead'ed, starting over immediately");
+        Settings.isTrial = false;
+        Settings.isDailyRun = false;
+        Settings.isEndless = false;
+        CardCrawlGame.trial = null;
+        CardCrawlGame.playCreditsBgm = false;
 
-            // reset the game, causing a restart
-            // CardCrawlGame.startOver() would be called here, which sets fadeOut() at 2, but I don't want to wait,
-            // so I am grabbing the actual start-over logic here, from CardCrawlGame.class:updateFade [line 517]
-            if (AbstractDungeon.scene != null){
-                AbstractDungeon.scene.fadeOutAmbiance();
-            }
-            long startTime = System.currentTimeMillis();
-            AbstractDungeon.screen = AbstractDungeon.CurrentScreen.NONE;
-            AbstractDungeon.reset();
-            FontHelper.cardTitleFont.getData().setScale(1.0F);
-            AbstractRelic.relicPage = 0;
-            SeedPanel.textField = "";
-            ModHelper.setModsFalse();
-            SeedHelper.cachedSeed = null;
-            Settings.seed = null;
-            Settings.seedSet = false;
-            Settings.specialSeed = null;
-            Settings.isTrial = false;
-            Settings.isDailyRun = false;
-            Settings.isEndless = false;
-            Settings.isFinalActAvailable = false;
-            Settings.hasRubyKey = false;
-            Settings.hasEmeraldKey = false;
-            Settings.hasSapphireKey = false;
-            CustomModeScreen.finalActAvailable = false;
-            CardCrawlGame.trial = null;
-            logger.info("Dungeon Reset: " + (System.currentTimeMillis() - startTime) + "ms");
-            startTime = System.currentTimeMillis();
-            ShopScreen.resetPurgeCost();
-            CardCrawlGame.tips.initialize();
-            CardCrawlGame.metricData.clearData();
-            logger.info("Shop Screen Rest, Tips Initialize, Metric Data Clear: " + (
-            System.currentTimeMillis() - startTime) + "ms");
-            startTime = System.currentTimeMillis();
-            UnlockTracker.refresh();
-            logger.info("Unlock Tracker Refresh:  " + (System.currentTimeMillis() - startTime) + "ms");
-            startTime = System.currentTimeMillis();
-            CardCrawlGame.mainMenuScreen = new MainMenuScreen();
-            CardCrawlGame.mainMenuScreen.bg.slideDownInstantly();
-            CardCrawlGame.saveSlotPref.putFloat(
-            SaveHelper.slotName("COMPLETION", CardCrawlGame.saveSlot), 
-            UnlockTracker.getCompletionPercentage());
-            CardCrawlGame.saveSlotPref.putLong(SaveHelper.slotName("PLAYTIME", CardCrawlGame.saveSlot), UnlockTracker.getTotalPlaytime());
-            CardCrawlGame.saveSlotPref.flush();
-            logger.info("New Main Menu Screen: " + (System.currentTimeMillis() - startTime) + "ms");
-            startTime = System.currentTimeMillis();
-            CardHelper.clear();
-            CardCrawlGame.mode = CardCrawlGame.GameMode.CHAR_SELECT;
-            CardCrawlGame.nextDungeon = "Exordium";
-            CardCrawlGame.dungeonTransitionScreen = new DungeonTransitionScreen("Exordium");
-            TipTracker.refresh();
-            System.gc();
-            logger.info("New Transition Screen, Tip Tracker Refresh: " + (
-            System.currentTimeMillis() - startTime) + "ms");
-            startTime = System.currentTimeMillis();
-
-            return SpireReturn.Return(null);
+        // reset the game, causing a restart
+        // CardCrawlGame.startOver() would be called here, which sets fadeOut() at 2, but I don't want to wait,
+        // so I am grabbing the actual start-over logic here, from CardCrawlGame.class:updateFade [line 517]
+        if (AbstractDungeon.scene != null){
+            AbstractDungeon.scene.fadeOutAmbiance();
         }
+        long startTime = System.currentTimeMillis();
+        AbstractDungeon.screen = AbstractDungeon.CurrentScreen.NONE;
+        AbstractDungeon.reset();
+        FontHelper.cardTitleFont.getData().setScale(1.0F);
+        AbstractRelic.relicPage = 0;
+        SeedPanel.textField = "";
+        ModHelper.setModsFalse();
+        SeedHelper.cachedSeed = null;
+        Settings.seed = null;
+        Settings.seedSet = false;
+        Settings.specialSeed = null;
+        Settings.isTrial = false;
+        Settings.isDailyRun = false;
+        Settings.isEndless = false;
+        Settings.isFinalActAvailable = false;
+        Settings.hasRubyKey = false;
+        Settings.hasEmeraldKey = false;
+        Settings.hasSapphireKey = false;
+        CustomModeScreen.finalActAvailable = false;
+        CardCrawlGame.trial = null;
+        logger.info("Dungeon Reset: " + (System.currentTimeMillis() - startTime) + "ms");
+        startTime = System.currentTimeMillis();
+        ShopScreen.resetPurgeCost();
+        CardCrawlGame.tips.initialize();
+        CardCrawlGame.metricData.clearData();
+        logger.info("Shop Screen Rest, Tips Initialize, Metric Data Clear: " + (
+        System.currentTimeMillis() - startTime) + "ms");
+        startTime = System.currentTimeMillis();
+        UnlockTracker.refresh();
+        logger.info("Unlock Tracker Refresh:  " + (System.currentTimeMillis() - startTime) + "ms");
+        startTime = System.currentTimeMillis();
+        CardCrawlGame.mainMenuScreen = new MainMenuScreen();
+        CardCrawlGame.mainMenuScreen.bg.slideDownInstantly();
+        CardCrawlGame.saveSlotPref.putFloat(
+        SaveHelper.slotName("COMPLETION", CardCrawlGame.saveSlot), 
+        UnlockTracker.getCompletionPercentage());
+        CardCrawlGame.saveSlotPref.putLong(SaveHelper.slotName("PLAYTIME", CardCrawlGame.saveSlot), UnlockTracker.getTotalPlaytime());
+        CardCrawlGame.saveSlotPref.flush();
+        logger.info("New Main Menu Screen: " + (System.currentTimeMillis() - startTime) + "ms");
+        startTime = System.currentTimeMillis();
+        CardHelper.clear();
+        CardCrawlGame.mode = CardCrawlGame.GameMode.CHAR_SELECT;
+        CardCrawlGame.nextDungeon = "Exordium";
+        CardCrawlGame.dungeonTransitionScreen = new DungeonTransitionScreen("Exordium");
+        TipTracker.refresh();
+        System.gc();
+        logger.info("New Transition Screen, Tip Tracker Refresh: " + (
+        System.currentTimeMillis() - startTime) + "ms");
+        startTime = System.currentTimeMillis();
     }
 }

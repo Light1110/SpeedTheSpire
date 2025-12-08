@@ -76,6 +76,42 @@ public class OvertlyAmbitiousLwjglPatches{
     }
 
     @SpirePatch(
+            clz = SoundMaster.class,
+            paramtypez = {String.class, boolean.class},
+            method = "play"
+    )
+    public static class NoPlaySoundPatch {
+        @SpirePrefixPatch
+        public static SpireReturn<Long> Prefix(SoundMaster _instance, String key, boolean useBgmVolume) {
+            return SpireReturn.Return(1L);
+        }
+    }
+
+    @SpirePatch(
+            clz = SoundMaster.class,
+            paramtypez = {String.class},
+            method = "play"
+    )
+    public static class NoPlaySoundPatch2 {
+        @SpirePrefixPatch
+        public static SpireReturn<Long> Prefix(SoundMaster _instance, String key) {
+            return SpireReturn.Return(1L);
+        }
+    }
+
+    @SpirePatch(
+            clz = SoundMaster.class,
+            paramtypez = {String.class, float.class},
+            method = "play"
+    )
+    public static class NoPlaySoundPatch3 {
+        @SpirePrefixPatch
+        public static SpireReturn<Long> Prefix(SoundMaster _instance, String key, float pitchVariation) {
+            return SpireReturn.Return(1L);
+        }
+    }
+
+    @SpirePatch(
         clz = AbstractCard.class,
         method="update"
     )
