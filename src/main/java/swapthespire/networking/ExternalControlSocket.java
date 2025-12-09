@@ -77,7 +77,17 @@ public class ExternalControlSocket {
                     out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                     listen();
                 } catch (IOException e) {
-                    closeQuietly();
+                    try {
+                        if (socket != null) {
+                            socket.close();
+                        }
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        socket = null;
+                        in = null;
+                        out = null;
+                    }
                     sleep(2000);
                 }
             }
@@ -91,7 +101,17 @@ public class ExternalControlSocket {
                 handleIncoming(payload);
             }
         } catch (IOException e) {
-            closeQuietly();
+            try {
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            } finally {
+                socket = null;
+                in = null;
+                out = null;
+            }
         }
     }
 
@@ -145,7 +165,17 @@ public class ExternalControlSocket {
             out.writeUTF(serialized);
             out.flush();
         } catch (IOException e) {
-            closeQuietly();
+            try {
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            } finally {
+                socket = null;
+                in = null;
+                out = null;
+            }
         }
     }
 
@@ -204,19 +234,6 @@ public class ExternalControlSocket {
                 return new CardRewardSelectCommand(obj.toString());
             default:
                 return null;
-        }
-    }
-
-    private void closeQuietly() {
-        try {
-            if (socket != null) {
-                socket.close();
-            }
-        } catch (IOException ignored) {
-        } finally {
-            socket = null;
-            in = null;
-            out = null;
         }
     }
 
