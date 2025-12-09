@@ -12,6 +12,11 @@ import org.apache.logging.log4j.Logger;
 public class InJavaCommunicationController implements CommunicationModStateReceiverI{
     private static final Logger logger = LogManager.getLogger(InJavaCommunicationController.class.getName());
     private final ExternalControlSocket socket;
+    
+    // For deduplication
+    private String lastGameState = null;
+    private long lastSendTime = 0;
+    private static final long DEDUPE_INTERVAL_MS = 200; // 200ms deduplication window
 
     public InJavaCommunicationController(ExternalControlSocket socket){
         this.socket = socket;
@@ -28,7 +33,21 @@ public class InJavaCommunicationController implements CommunicationModStateRecei
             return;
         }
         
+        // Deduplicate identical states sent within a short window ONLY when game is over (in_game: false)
+        // This fixes the double state send issue at game end
+        long now = System.currentTimeMillis();
+        boolean isNotInGame = gameState.contains("\"in_game\":false");
+        
+        if (isNotInGame && gameState.equals(lastGameState) && (now - lastSendTime < DEDUPE_INTERVAL_MS)) {
+            logger.info("Filtering duplicate state payload");
+            return;
+        }
+        
+        lastGameState = gameState;
+        lastSendTime = now;
+        
         String mode = SwapTheSpire.allowCommunicationMod() ? "communication" : "ludicrous";
+        // logger.info("Sending State Payload: " + gameState);
         socket.sendGameState(mode, gameState);
     }
 
