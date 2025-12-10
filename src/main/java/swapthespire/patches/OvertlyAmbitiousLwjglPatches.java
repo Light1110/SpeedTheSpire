@@ -12,6 +12,7 @@ import com.evacipated.cardcrawl.modthespire.lib.SpirePrefixPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import com.megacrit.cardcrawl.desktop.DesktopLauncher;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.audio.SoundMaster;
 import com.megacrit.cardcrawl.audio.MusicMaster;
 import com.megacrit.cardcrawl.cards.AbstractCard;
@@ -152,14 +153,17 @@ public class OvertlyAmbitiousLwjglPatches{
             return SpireReturn.Return(null);
         }
     }
-    // DISABLED: This patch breaks map room transitions when using socket communication
+    // Skip render everywhere except MAP screen to keep map selection working
     @SpirePatch(clz = CardCrawlGame.class, method="render")
     public static class YeetRender {
         @SpirePrefixPatch
         public static SpireReturn Prefix(CardCrawlGame _instance) {
-            // _instance.update();
-            // return SpireReturn.Return(null);
-            return SpireReturn.Continue();
+            if (CardCrawlGame.mode == CardCrawlGame.GameMode.GAMEPLAY
+                    && AbstractDungeon.screen == AbstractDungeon.CurrentScreen.MAP) {
+                return SpireReturn.Continue();
+            }
+            _instance.update();
+            return SpireReturn.Return(null);
         }
     }
 /*

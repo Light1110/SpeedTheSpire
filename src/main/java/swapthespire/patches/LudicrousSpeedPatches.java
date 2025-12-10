@@ -21,13 +21,14 @@ import swapthespire.SwapTheSpire;
 
 import ludicrousspeed.simulator.patches.ServerStartupPatches;
 import ludicrousspeed.LudicrousSpeedMod;
+import ludicrousspeed.simulator.ActionSimulator;
 
 /* 
  * Patches against stuff LudicrousSpeed stuff does that I don't want it to do
  */
 
 public class LudicrousSpeedPatches {
-    private static final Logger logger = LogManager.getLogger(  LudicrousSpeedPatches.class.getName());
+    private static final Logger logger = LogManager.getLogger(LudicrousSpeedPatches.class.getName());
 
     @SpirePatch(
             clz= ServerStartupPatches.GameStartupPatch.class,
@@ -64,6 +65,45 @@ public class LudicrousSpeedPatches {
                 return SpireReturn.Return(null);
             }
             return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(
+            clz = ActionSimulator.class,
+            method = "shouldWaitOnActions"
+    )
+    public static class RespectControllerInWait {
+        public static SpireReturn<Boolean> Prefix() {
+            if (LudicrousSpeedMod.controller == null || LudicrousSpeedMod.controller.isDone() || LudicrousSpeedMod.mustRestart) {
+                return SpireReturn.Return(false);
+            }
+            return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(
+            clz = ActionSimulator.class,
+            method = "actionLoop"
+    )
+    public static class CheckMapNodeInActionLoop {
+        public static SpireReturn Prefix() {
+            if (AbstractDungeon.getCurrMapNode() == null) {
+                return SpireReturn.Return(null);
+            }
+            return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(
+            clz = LudicrousSpeedMod.class,
+            method = "receivePreUpdate"
+    )
+    public static class PreventUpdateIfComplete {
+        public static SpireReturn Prefix(LudicrousSpeedMod __instance) {
+             if (AbstractDungeon.currMapNode != null && AbstractDungeon.getCurrRoom().monsters != null && AbstractDungeon.getCurrRoom().phase == AbstractRoom.RoomPhase.COMPLETE) {
+                 return SpireReturn.Return(null);
+             }
+             return SpireReturn.Continue();
         }
     }
 }

@@ -27,8 +27,6 @@ import com.megacrit.cardcrawl.map.MapRoomNode;
 import communicationmod.CommunicationMod;
 import swapthespire.SwapTheSpire;
 
-import ludicrousspeed.simulator.patches.ScreenPatches;
-
 /* We set the animation timers to small amounts because setting them to 0 seems to totally override the ability to skip actually do the logic needed*/
 public class ImmediateAnimationPatches {
     private static final Logger logger = LogManager.getLogger(  ImmediateAnimationPatches.class.getName());
@@ -83,20 +81,7 @@ public class ImmediateAnimationPatches {
         }
     }
 */
-    @SpirePatch(
-            clz= ScreenPatches.DisableDeathScreenpatch.class,
-            paramtypez = {DeathScreen.class, MonsterGroup.class},
-            method="Prefix"
-    )
-    
-    public static class PreventLudicrousFromStartingOverOnDeath {
-        public static SpireReturn Prefix(DeathScreen _instance, MonsterGroup monsterGroup) {
-            logger.info("I am patching a patch. What has my life come to?");
-            return SpireReturn.Return(SpireReturn.Continue());
-        }
 
-    }
-    
     /*
     @SpirePatch(
             clz= DeathScreen.class,

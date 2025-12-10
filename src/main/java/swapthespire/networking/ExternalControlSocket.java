@@ -27,6 +27,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import com.badlogic.gdx.Gdx;
 
 /**
  * Single socket that handles both CommunicationMod text commands and Ludicrous command lists.
@@ -54,6 +57,10 @@ public class ExternalControlSocket {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
+
+    // Socket 命令转交到主线程执行，避免多线程访问游戏状态导致 NPE
+    private final BlockingQueue<String> commandQueue = new LinkedBlockingQueue<>();
+    private final Object commandQueueLock = new Object();
 
     public ExternalControlSocket(SocketCommandController controller) {
         this(controller, System.getProperty("externalControlHost", DEFAULT_HOST),
@@ -121,8 +128,19 @@ public class ExternalControlSocket {
             String type = obj.get("type").getAsString();
             switch (type) {
                 case "comm_command":
-                    String command = obj.get("command").getAsString();
-                    CommunicationMod.executeMessage(command);
+                    // 将命令投递到主线程执行
+                    synchronized (commandQueueLock) {
+                        commandQueue.offer(obj.get("command").getAsString());
+                    }
+                    if (Gdx.app != null) {
+                        Gdx.app.postRunnable(() -> {
+                            synchronized (commandQueueLock) {
+                                while (!commandQueue.isEmpty()) {
+                                    CommunicationMod.executeMessage(commandQueue.poll());
+                                }
+                            }
+                        });
+                    }
                     break;
                 case "ludi_commands":
                     JsonArray array = obj.get("commands").getAsJsonArray();

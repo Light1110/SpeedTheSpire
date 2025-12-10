@@ -100,26 +100,11 @@ import com.megacrit.cardcrawl.map.MapRoomNode;
 import communicationmod.CommunicationMod;
 import swapthespire.SwapTheSpire;
 
-import ludicrousspeed.simulator.patches.ScreenPatches;
-
 /* We set the animation timers to small amounts because setting them to 0 seems to totally override the ability to skip actually do the logic needed*/
 public class StartOverOnDeathScreenPatch {
     private static final Logger logger = LogManager.getLogger(  StartOverOnDeathScreenPatch.class.getName());
 
-    @SpirePatch(
-            clz= ScreenPatches.DisableDeathScreenpatch.class,
-            paramtypez = {DeathScreen.class, MonsterGroup.class},
-            method="Prefix"
-    )
     
-    public static class PreventLudicrousFromStartingOverOnDeath {
-        public static SpireReturn Prefix(DeathScreen _instance, MonsterGroup monsterGroup) {
-            logger.info("I am patching a patch. What has my life come to?");
-            return SpireReturn.Return(SpireReturn.Continue());
-        }
-
-    }
-
     public static void deathReset() {
         logger.info("we dead'ed, starting over immediately");
         Settings.isTrial = false;
