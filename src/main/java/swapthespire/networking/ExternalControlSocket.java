@@ -1,10 +1,14 @@
 package swapthespire.networking;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import communicationmod.CommandExecutor;
 import communicationmod.CommunicationMod;
+import communicationmod.GameStateListener;
+import communicationmod.InvalidCommandException;
 import ludicrousspeed.simulator.commands.CardCommand;
 import ludicrousspeed.simulator.commands.CardRewardSelectCommand;
 import ludicrousspeed.simulator.commands.Command;
@@ -17,6 +21,7 @@ import ludicrousspeed.simulator.commands.PotionCommand;
 import swapthespire.controller.SocketCommandController;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import swapthespire.InJavaCommunicationController;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -26,6 +31,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -136,7 +142,7 @@ public class ExternalControlSocket {
                         Gdx.app.postRunnable(() -> {
                             synchronized (commandQueueLock) {
                                 while (!commandQueue.isEmpty()) {
-                                    CommunicationMod.executeMessage(commandQueue.poll());
+                                    executeCommunicationModCommand(commandQueue.poll());
                                 }
                             }
                         });
@@ -160,6 +166,25 @@ public class ExternalControlSocket {
             }
         } catch (Exception e) {
             logger.error("Failed to handle incoming payload", e);
+        }
+    }
+
+    private void executeCommunicationModCommand(String message) {
+        try {
+            logger.info("Read this message, executing: " + message);
+            boolean stateChanged = CommandExecutor.executeCommand(message);
+            if(stateChanged) {
+                GameStateListener.registerCommandExecution();
+            }
+        } catch (InvalidCommandException e) {
+            logger.error("Invalid command received, can't execute!");
+            HashMap<String, Object> jsonError = new HashMap<>();
+            jsonError.put("error", e.getMessage());
+            jsonError.put("ready_for_command", GameStateListener.isWaitingForCommand());
+            Gson gson = new Gson();
+            if (InJavaCommunicationController.instance != null) {
+                InJavaCommunicationController.instance.receiveGameState(gson.toJson(jsonError));
+            }
         }
     }
 
@@ -262,5 +287,3 @@ public class ExternalControlSocket {
         }
     }
 }
-
-

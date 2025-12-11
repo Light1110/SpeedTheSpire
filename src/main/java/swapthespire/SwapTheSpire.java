@@ -221,7 +221,8 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
         
         long now = System.currentTimeMillis();
         if (now - lastCombatStateSent > COMBAT_STATE_INTERVAL_MS) {
-            CommunicationMod.sendGameState();
+            // CommunicationMod.sendGameState(); // Private in origin version, use ReflectionHacks
+            ReflectionHacks.privateStaticMethod(CommunicationMod.class, "sendGameState").invoke();
             lastCombatStateSent = now;
         }
     }

@@ -8,6 +8,7 @@ import communicationmod.EndOfTurnAction;
 import communicationmod.ChoiceScreenUtils;
 
 import communicationmod.CommunicationMod;
+import swapthespire.InJavaCommunicationController;
 import swapthespire.SwapTheSpire;
 
 import ludicrousspeed.simulator.commands.CardRewardSelectCommand;
@@ -42,6 +43,21 @@ public class CommunicationModPatches {
                 return SpireReturn.Return(null);
             }
             return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(
+            clz= CommunicationMod.class,
+            method="sendMessage",
+            paramtypez={String.class}
+    )
+    public static class InterceptSendMessage {
+        public static SpireReturn Prefix(String message) {
+            if (InJavaCommunicationController.instance != null) {
+                InJavaCommunicationController.instance.receiveGameState(message);
+            }
+            // Prevent writing to the external process stream
+            return SpireReturn.Return(null);
         }
     }
 

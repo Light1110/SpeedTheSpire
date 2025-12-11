@@ -1,7 +1,6 @@
 package swapthespire;
 
 import communicationmod.CommunicationMod;
-import communicationmod.CommunicationModStateReceiverI;
 import swapthespire.networking.ExternalControlSocket;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
@@ -9,7 +8,7 @@ import com.megacrit.cardcrawl.rooms.AbstractRoom;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class InJavaCommunicationController implements CommunicationModStateReceiverI{
+public class InJavaCommunicationController {
     private static final Logger logger = LogManager.getLogger(InJavaCommunicationController.class.getName());
     private final ExternalControlSocket socket;
     
@@ -18,13 +17,15 @@ public class InJavaCommunicationController implements CommunicationModStateRecei
     private long lastSendTime = 0;
     private static final long DEDUPE_INTERVAL_MS = 200; // 200ms deduplication window
 
+    public static InJavaCommunicationController instance;
+
     public InJavaCommunicationController(ExternalControlSocket socket){
         this.socket = socket;
+        instance = this;
         logger.debug("Initializing CommunicationMod state bridge");
-        CommunicationMod.subscribeToGameStates(this);
+        // CommunicationMod.subscribeToGameStates(this); // Not available in origin
     }
 
-    @Override
     public void receiveGameState(String gameState) {
         // Filter out states when all monsters are dead in combat
         // This prevents sending states with only "end" command available, which causes errors
