@@ -21,4 +21,3 @@ SpeedTheSpire uses a unified TCP socket to send game state to external programs 
 
 ## Known Issues / TODO
 - speed up
-- cannot use potion
