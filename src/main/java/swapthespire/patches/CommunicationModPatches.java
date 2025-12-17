@@ -8,6 +8,8 @@ import communicationmod.EndOfTurnAction;
 import communicationmod.ChoiceScreenUtils;
 
 import communicationmod.CommunicationMod;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import swapthespire.InJavaCommunicationController;
 import swapthespire.SwapTheSpire;
 
@@ -52,7 +54,15 @@ public class CommunicationModPatches {
             paramtypez={String.class}
     )
     public static class InterceptSendMessage {
+        private static final Logger logger = LogManager.getLogger(InterceptSendMessage.class);
         public static SpireReturn Prefix(String message) {
+            if (message != null) {
+                logger.info("CommMod sendMessage intercepted, len={}", message.length());
+                // Uncomment for full payload debug:
+                // logger.info("CommMod payload: {}", message);
+            } else {
+                logger.info("CommMod sendMessage intercepted with null payload");
+            }
             if (InJavaCommunicationController.instance != null) {
                 InJavaCommunicationController.instance.receiveGameState(message);
             }

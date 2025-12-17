@@ -108,6 +108,14 @@ public class SwapTheSpire implements PostInitializeSubscriber, PostDungeonInitia
         }
 
         if (AbstractDungeon.getCurrRoom().phase == AbstractRoom.RoomPhase.COMBAT) {
+            // when in selection screens (hand select, grid, card reward), we want to switch back to CommunicationMod to correctly handle choose commands
+            if (AbstractDungeon.isScreenUp
+                    && (AbstractDungeon.screen == AbstractDungeon.CurrentScreen.HAND_SELECT
+                        || AbstractDungeon.screen == AbstractDungeon.CurrentScreen.GRID
+                        || AbstractDungeon.screen == AbstractDungeon.CurrentScreen.CARD_REWARD)) {
+                return InControl.COMMUNICATION_MOD;
+            }
+
             // we want to switch out of this controller when the enemies are dead
             boolean areMonstersDead = AbstractDungeon.getMonsters().areMonstersDead();
             boolean battleNotRegisteredAsOver = !AbstractDungeon.getCurrRoom().isBattleOver;
