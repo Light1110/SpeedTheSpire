@@ -1,23 +1,47 @@
-# SpeedTheSpire External Control Documentation
+# SpeedTheSpire
 
-SpeedTheSpire uses a unified TCP socket to send game state to external programs and receive commands.
+SpeedTheSpire is a Slay the Spire mod designed to enable external programs to control the game via TCP Socket communication. It facilitates automated game control and accelerated gameplay by integrating LudicrousSpeed and CommunicationMod, while disabling display rendering for maximum performance.
 
-## Socket Protocol
+Based on [SpeedTheSpire by enjoythecode](https://github.com/enjoythecode/SpeedTheSpire).
 
-- Default connection target: `127.0.0.1:5126`, can be overridden via JVM parameters
-  `-DexternalControlHost=...` and `-DexternalControlPort=...`.
-- Game → External Program: When CommunicationMod produces a state, it sends
-  `{"type":"game_state","mode":"communication|ludicrous","payload":<JSON string>}`.
-- External Program → Game:
-  - `{"type":"comm_command","command":"start ironclad"}`: Forwards text commands to CommunicationMod.
-  - `{"type":"ludi_commands","commands":[...],"complete":true,"append":false}`:
-    Converts the command list into a `ludicrousspeed.simulator.commands.Command` list, which is
-    executed sequentially by `SocketCommandController` during combat.
+## Requirements
 
-## Runtime Control Switching
+Ensure you have the following mods installed:
 
-- `SwapTheSpire` uses `InControl` to determine control. During non-combat phases, `LudicrousSpeedMod.controller` is set to null, and actual commands must be pushed by the external program in the form of `comm_command`.
-- During combat phases, `CommunicationMod.sendGameState()` is called periodically to ensure the external program continuously receives state updates, and operations are sent via `ludi_commands` messages.
+- **ModTheSpire**: [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=1605060445)
+- **BaseMod**: [Steam Workshop](https://steamcommunity.com/workshop/filedetails/?id=1605833019)
+- **CommunicationMod**: [Steam Workshop](https://steamcommunity.com/workshop/filedetails/?id=2131373661)
+- **LudicrousSpeed**: [GitHub](https://github.com/boardengineer/LudicrousSpeed)
+- **SaveStateMod**: [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2489671162)
 
-## Known Issues / TODO
-- speed up
+**Important Note**: This mod currently requires the **latest GitHub version** of LudicrousSpeed. The Steam Workshop version is not compatible.
+
+## Usage
+
+### 1. Start External Program
+External programs should connect to the game via a TCP socket. 
+- **Default Address**: `127.0.0.1:5126`
+- **Communication Protocol**: Follows the CommunicationMod standard.
+
+For a Python example, refer to [spirecomm](https://github.com/Light1110/spirecomm).
+
+### 2. Launch the Game
+Launch the game using ModTheSpire with the required mods enabled.
+
+**Example Command**:
+```bash
+cd /path/to/game
+./jre/bin/java -jar ModTheSpire.jar --mods basemod,stslib,CommunicationMod,SaveStateMod,LudicrousSpeed,SwapTheSpire --skip-intro
+```
+
+## Configuration
+
+You can customize the socket connection settings using JVM parameters:
+
+- **Socket Address**: `-DexternalControlHost=<ADDRESS>` (Default: `127.0.0.1`)
+- **Socket Port**: `-DexternalControlPort=<PORT>` (Default: `5126`)
+
+**Example with Custom Settings**:
+```bash
+./jre/bin/java -DexternalControlHost=127.0.0.1 -DexternalControlPort=5126 -jar ModTheSpire.jar ...
+```
