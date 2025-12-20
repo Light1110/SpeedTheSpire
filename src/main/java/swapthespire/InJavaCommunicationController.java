@@ -62,18 +62,6 @@ public class InJavaCommunicationController {
     }
 
     private boolean isStateStable() {
-        // Basic stability check: no actions in queue
-        if (AbstractDungeon.actionManager != null) {
-            boolean hasActions = !AbstractDungeon.actionManager.actions.isEmpty();
-            boolean hasCardQueue = !AbstractDungeon.actionManager.cardQueue.isEmpty();
-            boolean isWaiting = AbstractDungeon.actionManager.phase == GameActionManager.Phase.WAITING_ON_USER;
-            
-            // Generally, if actions are pending, or we are not waiting for user input, we shouldn't send state.
-            if (hasActions || hasCardQueue || !isWaiting) {
-                return false;
-            }
-        }
-
         // Deep check for monster intent stability
         // This ensures applyPowers() has been executed and intents are finalized
         if (AbstractDungeon.currMapNode != null && AbstractDungeon.getCurrRoom() != null && AbstractDungeon.getCurrRoom().monsters != null) {
