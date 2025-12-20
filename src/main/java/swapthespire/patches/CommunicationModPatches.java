@@ -55,7 +55,18 @@ public class CommunicationModPatches {
     )
     public static class InterceptSendMessage {
         private static final Logger logger = LogManager.getLogger(InterceptSendMessage.class);
+        private static String lastMessage = null;
+
         public static SpireReturn Prefix(String message) {
+            // Only deduplicate if we are in combat, to prevent double actions.
+            // For events/screens, we might need duplicate messages to proceed.
+            boolean inCombat = message != null && (message.contains("\"in_combat\":true"));
+
+            if (inCombat && message.equals(lastMessage)) {
+                return SpireReturn.Return(null);
+            }
+            lastMessage = message;
+
             if (message != null) {
                 logger.info("CommMod sendMessage intercepted, len={}", message.length());
                 // Uncomment for full payload debug:

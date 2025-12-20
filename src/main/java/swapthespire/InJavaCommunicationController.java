@@ -4,7 +4,10 @@ import communicationmod.CommunicationMod;
 import swapthespire.networking.ExternalControlSocket;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
+import com.megacrit.cardcrawl.actions.GameActionManager;
 
+import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.monsters.AbstractMonster.Intent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,6 +36,12 @@ public class InJavaCommunicationController {
             logger.debug("Filtering combat state: all monsters are dead");
             return;
         }
+
+        // Use stricter stability checks similar to CommunicationMod
+        if (!isStateStable()) {
+            logger.debug("Filtering unstable game state");
+            return;
+        }
         
         // Deduplicate identical states sent within a short window ONLY when game is over (in_game: false)
         // This fixes the double state send issue at game end
@@ -50,6 +59,54 @@ public class InJavaCommunicationController {
         String mode = SwapTheSpire.allowCommunicationMod() ? "communication" : "ludicrous";
         // logger.info("Sending State Payload: " + gameState);
         socket.sendGameState(mode, gameState);
+    }
+
+    private boolean isStateStable() {
+        // Basic stability check: no actions in queue
+        if (AbstractDungeon.actionManager != null) {
+            boolean hasActions = !AbstractDungeon.actionManager.actions.isEmpty();
+            boolean hasCardQueue = !AbstractDungeon.actionManager.cardQueue.isEmpty();
+            boolean isWaiting = AbstractDungeon.actionManager.phase == GameActionManager.Phase.WAITING_ON_USER;
+            
+            // Generally, if actions are pending, or we are not waiting for user input, we shouldn't send state.
+            if (hasActions || hasCardQueue || !isWaiting) {
+                return false;
+            }
+        }
+
+        // Deep check for monster intent stability
+        // This ensures applyPowers() has been executed and intents are finalized
+        if (AbstractDungeon.currMapNode != null && AbstractDungeon.getCurrRoom() != null && AbstractDungeon.getCurrRoom().monsters != null) {
+            for (AbstractMonster m : AbstractDungeon.getCurrRoom().monsters.monsters) {
+                if (m.isDead || m.isEscaping) continue;
+
+                // Check for DEBUG intent (not fully initialized)
+                if (m.intent == Intent.DEBUG) {
+                    return false;
+                }
+
+                // Check if attack damage has been calculated (applyPowers executed)
+                // If intent is an attack but damage is negative, it means calculation is pending
+                boolean isAttack = (
+                    m.intent == Intent.ATTACK ||
+                    m.intent == Intent.ATTACK_BUFF ||
+                    m.intent == Intent.ATTACK_DEBUFF ||
+                    m.intent == Intent.ATTACK_DEFEND
+                );
+
+                if (isAttack && m.getIntentDmg() < 0) {
+                     // Force update logic if LudicrousSpeed skipped it
+                     m.applyPowers();
+                     
+                     // Even if we fixed it, the current gameState string is stale (contains -1).
+                     // We must return false to filter this message.
+                     // The game loop/mod should generate a new message with correct values soon.
+                    //  logger.info("Fixed intent damage via applyPowers. Filtering stale state.");
+                     return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
