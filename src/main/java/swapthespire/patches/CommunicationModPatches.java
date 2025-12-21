@@ -58,9 +58,10 @@ public class CommunicationModPatches {
         private static String lastMessage = null;
 
         public static SpireReturn Prefix(String message) {
-            // Only deduplicate if we are in combat AND not in a screen (e.g. potion selection), 
-            // to prevent double actions while avoiding stuck states in selection screens.
-            boolean inCombat = message != null && message.contains("\"in_combat\":true");
+            // Only deduplicate if we are in combat, to prevent double actions.
+            // For events/screens, we might need duplicate messages to proceed.
+            // JSON uses "room_phase": "COMBAT" (check both compressed and pretty print just in case)
+            boolean inCombat = message != null && message.contains("\"room_phase\":\"COMBAT\"");
 
             if (inCombat && message.equals(lastMessage)) {
                 return SpireReturn.Return(null);

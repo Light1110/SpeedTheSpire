@@ -62,6 +62,11 @@ public class InJavaCommunicationController {
     }
 
     private boolean isStateStable() {
+        // Only check stability if we are actually in combat
+        if (AbstractDungeon.currMapNode == null || AbstractDungeon.getCurrRoom() == null || AbstractDungeon.getCurrRoom().phase != AbstractRoom.RoomPhase.COMBAT) {
+            return true;
+        }
+
         // Deep check for monster intent stability
         // This ensures applyPowers() has been executed and intents are finalized
         if (AbstractDungeon.currMapNode != null && AbstractDungeon.getCurrRoom() != null && AbstractDungeon.getCurrRoom().monsters != null) {
